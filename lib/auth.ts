@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'formflownc-dev-secret-change-in-production'
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is not set')
 const COOKIE_NAME = 'ffnc_session'
 
 export interface AgentSession {
@@ -20,12 +21,12 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function signToken(payload: AgentSession): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
+  return jwt.sign(payload, JWT_SECRET!, { expiresIn: '7d' })
 }
 
 export function verifyToken(token: string): AgentSession | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as AgentSession
+    return jwt.verify(token, JWT_SECRET!) as AgentSession
   } catch {
     return null
   }

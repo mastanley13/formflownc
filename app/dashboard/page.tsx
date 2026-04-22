@@ -1,6 +1,8 @@
 import { getSession } from '@/lib/auth'
 import prisma from '@/lib/db'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import CopyLinkButton from './CopyLinkButton'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   draft:            { label: 'Draft',              color: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -27,9 +29,10 @@ function formatDate(d: Date | string) {
 
 export default async function DashboardPage() {
   const session = await getSession()
+  if (!session) redirect('/login')
 
   const packages = await prisma.package.findMany({
-    where: { agentId: session!.agentId },
+    where: { agentId: session.agentId },
     include: { signers: { take: 2 } },
     orderBy: { createdAt: 'desc' },
   })
@@ -108,19 +111,9 @@ export default async function DashboardPage() {
                     <p className="text-xs text-slate-400 mt-1">Created {formatDate(pkg.createdAt)}</p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition">
+                  <div className="flex items-center gap-2 shrink-0">
                     {pkg.status === 'link_sent' || pkg.status === 'draft' ? (
-                      <button
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(
-                            `${window.location.origin}/intake/${pkg.clientLinkToken}`
-                          )
-                        }}
-                        className="text-xs text-teal-600 hover:text-teal-700 font-medium px-3 py-1.5 rounded-lg border border-teal-200 hover:bg-teal-50 transition"
-                        title="Copy client link"
-                      >
-                        Copy Link
-                      </button>
+                      <CopyLinkButton token={pkg.clientLinkToken} />
                     ) : null}
                   </div>
                 </div>

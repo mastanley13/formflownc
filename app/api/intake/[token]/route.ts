@@ -1,16 +1,10 @@
 import prisma from '@/lib/db'
-import { fillPdf } from '@/lib/pdf-engine'
-import { getMappingForForm } from '@/lib/pdf-engine'
-import type { CollectedData } from '@/lib/pdf-engine'
-import { readFile } from 'fs/promises'
-import path from 'path'
 
 async function resolvePackage(token: string) {
-  const pkg = await prisma.package.findUnique({
+  return prisma.package.findUnique({
     where: { clientLinkToken: token },
     include: { agent: true, signers: true },
   })
-  return pkg
 }
 
 export async function GET(_req: Request, ctx: RouteContext<'/api/intake/[token]'>) {
@@ -27,6 +21,14 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/intake/[token]'
     return Response.json({ error: 'This link is no longer active.' }, { status: 410 })
   }
 
+  // Mark as opened on first access
+  if (pkg.status === 'link_sent') {
+    await prisma.package.update({
+      where: { id: pkg.id },
+      data: { status: 'client_opened' },
+    })
+  }
+
   const forms = await prisma.formTemplate.findMany({
     where: { id: { in: JSON.parse(pkg.formsSelected) as string[] } },
     select: { id: true, formNumber: true, formName: true, category: true },
@@ -34,7 +36,7 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/intake/[token]'
 
   return Response.json({
     propertyAddress: pkg.propertyAddress,
-    status: pkg.status,
+    status: pkg.status === 'link_sent' ? 'client_opened' : pkg.status,
     agent: {
       name: pkg.agent.name,
       firmName: pkg.agent.firmName,
@@ -58,41 +60,51 @@ export async function POST(request: Request, ctx: RouteContext<'/api/intake/[tok
   if (pkg.status === 'completed' || pkg.status === 'expired') {
     return Response.json({ error: 'This link is no longer active.' }, { status: 410 })
   }
+  // Prevent re-submission if already past client_completed
+  if (pkg.status === 'signing') {
+    return Response.json({ error: 'Documents already submitted for signing.' }, { status: 409 })
+  }
 
-  const clientData = await request.json()
+  let clientData: Record<string, string>
+  try {
+    const body = await request.json()
+    if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+      return Response.json({ error: 'clientData must be an object.' }, { status: 400 })
+    }
+    // Allow only string values keyed by known canonical field names (basic allowlist check)
+    clientData = Object.fromEntries(
+      Object.entries(body as Record<string, unknown>)
+        .filter(([k, v]) => typeof k === 'string' && k.length <= 64 && typeof v === 'string' && (v as string).length <= 1024)
+        .map(([k, v]) => [k, v as string])
+        .slice(0, 100)
+    )
+  } catch {
+    return Response.json({ error: 'Invalid JSON body.' }, { status: 400 })
+  }
 
+  // Save client data and advance to client_completed
   await prisma.package.update({
     where: { id: pkg.id },
     data: {
       clientData: JSON.stringify(clientData),
-      status: 'signing',
+      status: 'client_completed',
     },
   })
 
-  // Merge agent + client data for PDF fill
-  const agentData = JSON.parse(pkg.agentData) as CollectedData
-  const mergedData: CollectedData = { ...agentData, ...clientData }
-
-  const formIds: string[] = JSON.parse(pkg.formsSelected)
-  const templates = await prisma.formTemplate.findMany({ where: { id: { in: formIds } } })
-
-  const fillResults: Array<{ formNumber: string; status: string; filledCount: number }> = []
-
-  for (const template of templates) {
-    try {
-      const pdfPath = path.resolve(process.cwd(), template.pdfFilePath)
-      const pdfBytes = new Uint8Array(await readFile(pdfPath))
-      const fieldMapping = JSON.parse(template.fieldMappings) as Record<string, string>
-      const { filledCount } = await fillPdf(pdfBytes, fieldMapping, mergedData, false)
-      fillResults.push({ formNumber: template.formNumber, status: 'filled', filledCount })
-    } catch {
-      // Real PDFs may not exist yet in dev — record the attempt
-      fillResults.push({ formNumber: template.formNumber, status: 'skipped_no_pdf', filledCount: 0 })
+  // Trigger PDF generation + optional DocuSeal submission via internal API
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+    const genRes = await fetch(`${baseUrl}/api/packages/${pkg.id}/generate-pdfs`, {
+      method: 'POST',
+      headers: { 'x-internal-token': process.env.INTERNAL_API_TOKEN ?? '' },
+    })
+    if (genRes.ok) {
+      const genData = await genRes.json() as { status?: string; fillResults?: unknown }
+      return Response.json({ ok: true, fillResults: genData.fillResults, status: genData.status })
     }
+  } catch {
+    // Non-fatal — client data is saved; agent can regenerate manually
   }
 
-  // Stub: DocuSeal submission would happen here
-  // await submitToDocuSeal(pkg, filledPdfs, pkg.signers)
-
-  return Response.json({ ok: true, fillResults, status: 'signing' })
+  return Response.json({ ok: true, status: 'client_completed' })
 }

@@ -32,6 +32,7 @@ export default function StepDetails({
   const [agentInfo, setAgentInfo] = useState<Record<string, string>>({})
   const [fields, setFields] = useState<Record<string, string>>(data.agentData)
   const [loadingAgent, setLoadingAgent] = useState(true)
+  const [agentError, setAgentError] = useState(false)
 
   // Determine which field sets to show based on selected forms
   const [formNumbers, setFormNumbers] = useState<string[]>([])
@@ -55,7 +56,7 @@ export default function StepDetails({
         }
         setLoadingAgent(false)
       })
-      .catch(() => setLoadingAgent(false))
+      .catch(() => { setLoadingAgent(false); setAgentError(true) })
 
     // Fetch selected form numbers
     if (data.selectedForms.length > 0) {
@@ -67,7 +68,7 @@ export default function StepDetails({
             .map((f) => f.formNumber)
           setFormNumbers(nums)
         })
-        .catch(() => { /* ignore */ })
+        .catch(() => { /* form numbers are optional — falls back to showing all field sections */ })
     }
   }, [data.selectedForms])
 
@@ -114,6 +115,8 @@ export default function StepDetails({
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Agent Info (pre-filled)</p>
         {loadingAgent ? (
           <p className="text-sm text-slate-400">Loading profile…</p>
+        ) : agentError ? (
+          <p className="text-sm text-red-500">Could not load agent profile. Fields will not be pre-filled.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm">
             {Object.entries(agentInfo).filter(([, v]) => v).map(([k, v]) => (

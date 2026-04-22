@@ -15,6 +15,7 @@ export default function StepReview({
   error: string
 }) {
   const [forms, setForms] = useState<FormInfo[]>([])
+  const [formLoadError, setFormLoadError] = useState(false)
 
   useEffect(() => {
     fetch('/api/forms')
@@ -23,7 +24,7 @@ export default function StepReview({
         const selected = (d.forms as FormInfo[]).filter((f) => data.selectedForms.includes(f.id))
         setForms(selected)
       })
-      .catch(() => { /* ignore */ })
+      .catch(() => setFormLoadError(true))
   }, [data.selectedForms])
 
   const roleLabel = (role: string) =>
@@ -46,15 +47,19 @@ export default function StepReview({
       </ReviewSection>
 
       {/* Forms */}
-      <ReviewSection title={`Forms (${forms.length})`}>
-        <div className="space-y-1.5">
-          {forms.map((f) => (
-            <div key={f.id} className="flex items-center gap-2">
-              <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-mono font-semibold">{f.formNumber}</span>
-              <span className="text-sm text-slate-700">{f.formName}</span>
-            </div>
-          ))}
-        </div>
+      <ReviewSection title={`Forms (${forms.length || data.selectedForms.length})`}>
+        {formLoadError ? (
+          <p className="text-sm text-red-500">{data.selectedForms.length} form{data.selectedForms.length !== 1 ? 's' : ''} selected (details unavailable)</p>
+        ) : (
+          <div className="space-y-1.5">
+            {forms.map((f) => (
+              <div key={f.id} className="flex items-center gap-2">
+                <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-mono font-semibold">{f.formNumber}</span>
+                <span className="text-sm text-slate-700">{f.formName}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </ReviewSection>
 
       {/* Signers */}

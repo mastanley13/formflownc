@@ -161,9 +161,7 @@ async function main() {
   }
 
   console.log('\n✨ Seed complete!')
-  console.log('\n📋 Login credentials:')
-  console.log('   Email:    chris@buyingnewbern.com')
-  console.log('   Password: formflow2024!')
+  console.log('\n📋 Agent email: chris@buyingnewbern.com')
 }
 
 main()
