@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Agent {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  licenseNumber String?
+  firmName      String?
+  firmAddress   String?
+  firmPhone     String?
+  firmLicense   String?
+  createdAt     DateTime  @default(now())
+  packages      Package[]
+
+  @@map("agents")
+}
+
+model FormTemplate {
+  id            String   @id @default(cuid())
+  formNumber    String   @unique
+  formName      String
+  category      String   // JSON array
+  pdfFilePath   String
+  fieldMappings String   // JSON: pdfFieldName -> canonicalKey
+  isActive      Boolean  @default(true)
+  version       String   @default("1.0")
+  uploadedAt    DateTime @default(now())
+
+  @@map("form_templates")
+}
+
+model Package {
+  id                  String          @id @default(cuid())
+  agentId             String
+  propertyAddress     String
+  status              String          @default("draft")
+  clientLinkToken     String          @unique
+  clientLinkExpiresAt DateTime
+  formsSelected       String          // JSON array of form_template ids
+  agentData           String          @default("{}")
+  clientData          String          @default("{}")
+  createdAt           DateTime        @default(now())
+  agent               Agent           @relation(fields: [agentId], references: [id])
+  signers             PackageSigner[]
+
+  @@map("packages")
+}
+
+model PackageSigner {
+  id                   String    @id @default(cuid())
+  packageId            String
+  name                 String
+  email                String
+  phone                String?
+  role                 String    // seller | buyer | agent | co_agent
+  docusealSubmissionId String?
+  signedAt             DateTime?
+  package              Package   @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@map("package_signers")
+}
