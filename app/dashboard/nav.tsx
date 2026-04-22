@@ -44,6 +44,7 @@ export default function DashboardNav({ agentName }: { agentName: string }) {
         {/* Desktop nav */}
         <nav className="hidden sm:flex items-center gap-1">
           {navLink('/dashboard', 'Packages')}
+          {navLink('/dashboard/forms', 'Forms')}
           {navLink('/dashboard/new', 'New Package')}
         </nav>
 
@@ -90,6 +91,7 @@ export default function DashboardNav({ agentName }: { agentName: string }) {
       {menuOpen && (
         <div className="sm:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-1">
           {navLink('/dashboard', 'Packages')}
+          {navLink('/dashboard/forms', 'Forms')}
           {navLink('/dashboard/new', 'New Package')}
           <button
             onClick={handleLogout}

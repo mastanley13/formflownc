@@ -6,10 +6,54 @@ export async function GET() {
   if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
 
   const forms = await prisma.formTemplate.findMany({
-    where: { isActive: true },
     orderBy: { formNumber: 'asc' },
-    select: { id: true, formNumber: true, formName: true, category: true, version: true },
+    select: {
+      id: true, formNumber: true, formName: true, category: true,
+      version: true, isActive: true, pdfFilePath: true, uploadedAt: true,
+    },
   })
 
   return Response.json({ forms })
+}
+
+// Create or upsert a form template (called after user reviews field mappings)
+export async function POST(request: Request) {
+  const session = await getSession()
+  if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
+  try {
+    const body = await request.json()
+    const { formNumber, formName, category, version, pdfFilePath, fieldMappings } = body
+
+    if (!formNumber || !formName || !pdfFilePath || !fieldMappings) {
+      return Response.json({ error: 'formNumber, formName, pdfFilePath, and fieldMappings are required.' }, { status: 400 })
+    }
+
+    const form = await prisma.formTemplate.upsert({
+      where: { formNumber },
+      update: {
+        formName,
+        category: typeof category === 'string' ? category : JSON.stringify(category),
+        version: version ?? '2024',
+        pdfFilePath,
+        fieldMappings: typeof fieldMappings === 'string' ? fieldMappings : JSON.stringify(fieldMappings),
+        isActive: true,
+        uploadedAt: new Date(),
+      },
+      create: {
+        formNumber,
+        formName,
+        category: typeof category === 'string' ? category : JSON.stringify(category),
+        version: version ?? '2024',
+        pdfFilePath,
+        fieldMappings: typeof fieldMappings === 'string' ? fieldMappings : JSON.stringify(fieldMappings),
+        isActive: true,
+      },
+    })
+
+    return Response.json({ form }, { status: 201 })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return Response.json({ error: message }, { status: 500 })
+  }
 }
