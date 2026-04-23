@@ -2,11 +2,13 @@ import type { NextConfig } from 'next'
 
 const isDev = process.env.NODE_ENV === 'development'
 
-// In production: no unsafe-inline/unsafe-eval for scripts (XSS protection).
-// In dev: Next.js fast-refresh requires both.
+// Next.js injects inline <script> tags for React hydration / chunk loading.
+// Without 'unsafe-inline' those scripts are blocked by CSP and every
+// client component (login, register, dashboard nav, etc.) renders as a
+// blank white page.  In dev we also need 'unsafe-eval' for fast-refresh.
 const scriptSrc = isDev
   ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-  : "script-src 'self'"
+  : "script-src 'self' 'unsafe-inline'"
 
 const CSP = [
   "default-src 'self'",
