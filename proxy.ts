@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const COOKIE_NAME = 'ffnc_session'
-const PUBLIC_PATHS = ['/login', '/register', '/intake', '/api/auth', '/api/intake', '/_next', '/favicon']
+const PUBLIC_PATHS = ['/login', '/register', '/intake', '/api/auth', '/api/intake', '/api/webhooks', '/_next', '/favicon']
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl

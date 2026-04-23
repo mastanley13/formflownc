@@ -5,9 +5,18 @@
 // This route is kept for manual triggers from the dashboard.
 // The intake POST handler calls generatePackagePdfs() directly.
 
+import crypto from 'crypto'
 import { getSession } from '@/lib/auth'
+import { verifyCsrfToken } from '@/lib/csrf'
 import prisma from '@/lib/db'
 import { generatePackagePdfs } from '@/lib/generate-package-pdfs'
+
+const CSRF_HEADER = 'x-csrf-token'
+
+function timingSafeTokenCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
 
 export async function POST(req: Request, ctx: RouteContext<'/api/packages/[id]/generate-pdfs'>) {
   const INTERNAL_API_TOKEN = process.env.INTERNAL_API_TOKEN
@@ -18,9 +27,17 @@ export async function POST(req: Request, ctx: RouteContext<'/api/packages/[id]/g
 
   // Accept either an authenticated session or an internal server-to-server token
   const internalToken = req.headers.get('x-internal-token')
-  const isInternal = Boolean(internalToken && internalToken === INTERNAL_API_TOKEN)
+  const isInternal = Boolean(internalToken && timingSafeTokenCompare(internalToken, INTERNAL_API_TOKEN))
   const session = isInternal ? null : await getSession()
   if (!isInternal && !session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
+  // CSRF verification for session-authenticated requests (not internal token calls)
+  if (session) {
+    const csrfToken = req.headers.get(CSRF_HEADER) ?? ''
+    if (!verifyCsrfToken(csrfToken, session.agentId)) {
+      return Response.json({ error: 'Invalid CSRF token.' }, { status: 403 })
+    }
+  }
 
   const { id } = await ctx.params
 

@@ -4,6 +4,7 @@
 // POST body (JSON, optional): { data: CollectedData }
 // If no body or empty data, uses built-in sample data for Chris Rayner.
 
+import { getSession } from '@/lib/auth'
 import { createTestListingAgreementPdf, fillPdf } from '@/lib/pdf-engine'
 import { FORM_101_MAPPING } from '@/lib/pdf-engine'
 
@@ -33,6 +34,9 @@ const SAMPLE_DATA = {
 }
 
 export async function GET() {
+  const session = await getSession()
+  if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
   const pdfBytes = await createTestListingAgreementPdf()
   return new Response(Buffer.from(pdfBytes), {
     headers: {
@@ -43,6 +47,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const session = await getSession()
+  if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
   try {
     const body = await request.json().catch(() => ({}))
     const data = (body.data && Object.keys(body.data).length > 0) ? body.data : SAMPLE_DATA

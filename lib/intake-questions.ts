@@ -61,7 +61,7 @@ const FORM_170: FormIntakeConfig = {
           showExplanationOn: 'Yes',
         },
         {
-          id: 'disc_encroachments',
+          id: 'disc_boundary_disputes',
           label: 'Are there any encroachments or boundary disputes?',
           type: 'yes-no-norep',
           required: true,
@@ -145,7 +145,7 @@ const FORM_170: FormIntakeConfig = {
       description: 'Questions about the structure and physical condition of the property.',
       questions: [
         {
-          id: 'disc_foundation_problems',
+          id: 'disc_foundation_defects',
           label: 'Any problems with foundation, slab, or crawl space?',
           type: 'yes-no-norep',
           required: true,
@@ -166,7 +166,7 @@ const FORM_170: FormIntakeConfig = {
           showExplanationOn: 'Yes',
         },
         {
-          id: 'disc_roof_problems',
+          id: 'disc_roof_defects',
           label: 'Any problems with roof or gutters?',
           type: 'yes-no-norep',
           required: true,
@@ -201,7 +201,7 @@ const FORM_170: FormIntakeConfig = {
           showExplanationOn: 'Yes',
         },
         {
-          id: 'disc_termite_damage',
+          id: 'disc_pest_damage',
           label: 'Any termite or wood-boring insect damage?',
           type: 'yes-no-norep',
           required: true,
@@ -215,22 +215,22 @@ const FORM_170: FormIntakeConfig = {
       description: 'Electrical, plumbing, HVAC, and water heater information.',
       questions: [
         {
-          id: 'disc_electrical_problems',
+          id: 'disc_electrical_defects',
           label: 'Any problems with the electrical system?',
           type: 'yes-no-norep',
           required: true,
           showExplanationOn: 'Yes',
         },
         {
-          id: 'disc_plumbing_problems',
+          id: 'disc_plumbing_defects',
           label: 'Any problems with the plumbing system?',
           type: 'yes-no-norep',
           required: true,
           showExplanationOn: 'Yes',
         },
         {
-          id: 'disc_heating_problems',
-          label: 'Any problems with the heating system?',
+          id: 'disc_hvac_defects',
+          label: 'Any problems with the heating/HVAC system?',
           type: 'yes-no-norep',
           required: true,
           showExplanationOn: 'Yes',
@@ -250,7 +250,7 @@ const FORM_170: FormIntakeConfig = {
           placeholder: 'e.g., 5 years',
         },
         {
-          id: 'disc_cooling_problems',
+          id: 'disc_hvac_cooling',
           label: 'Any problems with the cooling/AC system?',
           type: 'yes-no-norep',
           required: true,
@@ -299,7 +299,7 @@ const FORM_170: FormIntakeConfig = {
       description: 'Environmental hazards, testing, and site conditions.',
       questions: [
         {
-          id: 'disc_environmental_hazards',
+          id: 'disc_env_hazards',
           label: 'Any known environmental hazards (asbestos, lead paint, radon, underground storage tanks, etc.)?',
           type: 'yes-no-norep',
           required: true,
@@ -390,14 +390,14 @@ const FORM_170: FormIntakeConfig = {
           showExplanationOn: 'Yes',
         },
         {
-          id: 'disc_zoning_violations',
+          id: 'disc_code_violations',
           label: 'Any zoning violations?',
           type: 'yes-no-norep',
           required: true,
           showExplanationOn: 'Yes',
         },
         {
-          id: 'disc_pending_legal',
+          id: 'disc_pending_lawsuits',
           label: 'Any pending legal actions affecting the property?',
           type: 'yes-no-norep',
           required: true,
