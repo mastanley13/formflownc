@@ -175,7 +175,7 @@ export default function PackageDetailPage() {
 
       {/* Action buttons */}
       <div className="flex flex-wrap gap-3 mb-8">
-        {isActive && !isExpired && (
+        {['link_sent', 'client_opened'].includes(pkg.status) && !isExpired && (
           <button
             onClick={copyLink}
             className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border transition ${

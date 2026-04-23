@@ -31,14 +31,32 @@ export async function PATCH(request: Request) {
 
   const body = await request.json() as Record<string, unknown>
 
+  function strField(v: unknown, max: number, fieldName: string): string | null | Response {
+    if (typeof v !== 'string') return null
+    if (v.trim().length > max) return Response.json({ error: `${fieldName} exceeds maximum length of ${max}.` }, { status: 400 })
+    return v
+  }
+
+  const nameVal      = strField(body.name,          100, 'name')
+  const phoneVal     = strField(body.phone,           20, 'phone')
+  const firmNameVal  = strField(body.firmName,       200, 'firmName')
+  const firmAddrVal  = strField(body.firmAddress,    500, 'firmAddress')
+  const firmPhoneVal = strField(body.firmPhone,       20, 'firmPhone')
+  const firmLicVal   = strField(body.firmLicense,     50, 'firmLicense')
+  const licNumVal    = strField(body.licenseNumber,   50, 'licenseNumber')
+
+  for (const v of [nameVal, phoneVal, firmNameVal, firmAddrVal, firmPhoneVal, firmLicVal, licNumVal]) {
+    if (v instanceof Response) return v
+  }
+
   const updateData: Record<string, unknown> = {}
-  if (typeof body.name === 'string' && body.name.trim()) updateData.name = body.name.trim()
-  if (typeof body.phone === 'string') updateData.phone = body.phone.trim() || null
-  if (typeof body.firmName === 'string') updateData.firmName = body.firmName.trim() || null
-  if (typeof body.firmAddress === 'string') updateData.firmAddress = body.firmAddress.trim() || null
-  if (typeof body.firmPhone === 'string') updateData.firmPhone = body.firmPhone.trim() || null
-  if (typeof body.firmLicense === 'string') updateData.firmLicense = body.firmLicense.trim() || null
-  if (typeof body.licenseNumber === 'string') updateData.licenseNumber = body.licenseNumber.trim() || null
+  if (typeof nameVal === 'string' && nameVal.trim()) updateData.name = nameVal.trim()
+  if (typeof phoneVal === 'string') updateData.phone = phoneVal.trim() || null
+  if (typeof firmNameVal === 'string') updateData.firmName = firmNameVal.trim() || null
+  if (typeof firmAddrVal === 'string') updateData.firmAddress = firmAddrVal.trim() || null
+  if (typeof firmPhoneVal === 'string') updateData.firmPhone = firmPhoneVal.trim() || null
+  if (typeof firmLicVal === 'string') updateData.firmLicense = firmLicVal.trim() || null
+  if (typeof licNumVal === 'string') updateData.licenseNumber = licNumVal.trim() || null
 
   // Password change
   if (typeof body.newPassword === 'string' && body.newPassword.length > 0) {

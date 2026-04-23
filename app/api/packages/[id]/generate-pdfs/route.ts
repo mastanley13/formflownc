@@ -11,10 +11,13 @@ import type { DocuSealDocument, DocuSealSigner } from '@/lib/docuseal'
 import { readFile, writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 
-const INTERNAL_API_TOKEN = process.env.INTERNAL_API_TOKEN
-if (!INTERNAL_API_TOKEN) throw new Error('INTERNAL_API_TOKEN environment variable is not set')
-
 export async function POST(req: Request, ctx: RouteContext<'/api/packages/[id]/generate-pdfs'>) {
+  const INTERNAL_API_TOKEN = process.env.INTERNAL_API_TOKEN
+  if (!INTERNAL_API_TOKEN) {
+    console.error('[generate-pdfs] INTERNAL_API_TOKEN is not set')
+    return Response.json({ error: 'Server misconfiguration.' }, { status: 500 })
+  }
+
   // Accept either an authenticated session or an internal server-to-server token
   const internalToken = req.headers.get('x-internal-token')
   const isInternal = Boolean(internalToken && internalToken === INTERNAL_API_TOKEN)

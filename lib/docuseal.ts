@@ -86,7 +86,7 @@ export async function createSubmission(
     body: JSON.stringify({
       documents: docPayload,
       submitters: submitterPayload,
-      send_email: true,
+      send_email: false,
     }),
   })
 

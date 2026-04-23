@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer'
 
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 function isConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
 }
@@ -67,11 +71,11 @@ export async function sendPackageCreatedEmail(opts: {
           <h1 style="margin:0;font-size:20px;font-weight:700">FormFlowNC</h1>
         </div>
         <h2 style="color:#0f172a;margin-bottom:8px">Your client package is ready</h2>
-        <p style="color:#475569">Hi ${opts.agentName},</p>
-        <p style="color:#475569">A new package has been created for <strong>${opts.propertyAddress}</strong>. Send the link below to your client to collect their information and disclosures.</p>
+        <p style="color:#475569">Hi ${esc(opts.agentName)},</p>
+        <p style="color:#475569">A new package has been created for <strong>${esc(opts.propertyAddress)}</strong>. Send the link below to your client to collect their information and disclosures.</p>
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:20px 0">
           <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Client Intake Link</p>
-          <a href="${opts.clientLink}" style="color:#0f766e;font-weight:600;word-break:break-all">${opts.clientLink}</a>
+          <a href="${esc(opts.clientLink)}" style="color:#0f766e;font-weight:600;word-break:break-all">${esc(opts.clientLink)}</a>
           <p style="margin:8px 0 0;font-size:12px;color:#94a3b8">Expires ${expires}</p>
         </div>
         <p style="color:#94a3b8;font-size:12px;margin-top:32px">FormFlowNC · NC REALTOR Document Automation</p>
@@ -96,8 +100,8 @@ export async function sendAgentCompletionEmail(opts: {
           <h1 style="margin:0;font-size:20px;font-weight:700">FormFlowNC</h1>
         </div>
         <h2 style="color:#0f172a;margin-bottom:8px">All signatures collected</h2>
-        <p style="color:#475569">Hi ${opts.agentName},</p>
-        <p style="color:#475569">All parties have signed the documents for <strong>${opts.propertyAddress}</strong>. The fully executed PDFs are attached to this email.</p>
+        <p style="color:#475569">Hi ${esc(opts.agentName)},</p>
+        <p style="color:#475569">All parties have signed the documents for <strong>${esc(opts.propertyAddress)}</strong>. The fully executed PDFs are attached to this email.</p>
         <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:16px;margin:20px 0">
           <p style="margin:0;color:#065f46;font-weight:600">✓ ${opts.attachments.length} signed document${opts.attachments.length !== 1 ? 's' : ''} attached</p>
         </div>
@@ -124,8 +128,8 @@ export async function sendSignerCompletionEmail(opts: {
           <h1 style="margin:0;font-size:20px;font-weight:700">FormFlowNC</h1>
         </div>
         <h2 style="color:#0f172a;margin-bottom:8px">Signature received</h2>
-        <p style="color:#475569">Hi ${opts.signerName},</p>
-        <p style="color:#475569">Your signature for the documents related to <strong>${opts.propertyAddress}</strong> has been received. Your agent ${opts.agentName} will be notified when all parties have signed.</p>
+        <p style="color:#475569">Hi ${esc(opts.signerName)},</p>
+        <p style="color:#475569">Your signature for the documents related to <strong>${esc(opts.propertyAddress)}</strong> has been received. Your agent ${esc(opts.agentName)} will be notified when all parties have signed.</p>
         <p style="color:#94a3b8;font-size:12px;margin-top:32px">FormFlowNC · NC REALTOR Document Automation</p>
       </div>
     `,
