@@ -3,6 +3,7 @@
 import { useState, useRef, FormEvent, ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getCsrfToken } from '@/lib/csrf-client'
 
 type DetectedField = {
   name: string
@@ -65,7 +66,12 @@ export default function NewFormPage() {
     fd.append('category', JSON.stringify(categories))
     fd.append('version', version.trim() || '2025')
 
-    const res = await fetch('/api/forms/upload', { method: 'POST', body: fd })
+    const csrfToken = await getCsrfToken()
+    const res = await fetch('/api/forms/upload', {
+      method: 'POST',
+      headers: { 'x-csrf-token': csrfToken },
+      body: fd,
+    })
     const data = await res.json() as UploadResult & { error?: string }
 
     setUploading(false)
@@ -95,9 +101,10 @@ export default function NewFormPage() {
       if (canonical.trim()) fieldMappings[pdfField] = canonical.trim()
     }
 
+    const csrfToken2 = await getCsrfToken()
     const res = await fetch('/api/forms', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken2 },
       body: JSON.stringify({
         formNumber: uploadResult.formNumber,
         formName: uploadResult.formName,

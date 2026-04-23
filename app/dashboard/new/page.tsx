@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { getCsrfToken } from '@/lib/csrf-client'
 import StepProperty from './steps/StepProperty'
 import StepForms from './steps/StepForms'
 import StepSigners from './steps/StepSigners'
@@ -78,9 +79,11 @@ export default function NewPackagePage() {
     setSubmitting(true)
     setSubmitError('')
     try {
+      const csrfToken = await getCsrfToken()
+
       const res = await fetch('/api/packages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
         body: JSON.stringify({
           propertyAddress: data.propertyAddress,
           formsSelected: data.selectedForms,

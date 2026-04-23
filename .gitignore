@@ -54,4 +54,3 @@ next-env.d.ts
 /uploads/filled/
 # Keep uploads/forms/ tracked if desired, but exclude actual PDF binaries
 /uploads/forms/*.pdf
-.claude/worktrees/

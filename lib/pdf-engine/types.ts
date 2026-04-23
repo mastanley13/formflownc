@@ -24,7 +24,7 @@ export interface FillResult {
   filledCount: number
 }
 
-// Canonical field registry -- every field the system understands
+// Canonical field registry — every field the system understands
 export const CANONICAL_FIELDS = {
   // Property
   property_address: 'Property Street Address',
@@ -101,7 +101,7 @@ export const CANONICAL_FIELDS = {
   selling_agent_phone: 'Selling Agent Phone',
   selling_agent_firm: 'Selling Agent Firm',
 
-  // Disclosures
+  // Disclosures (checkbox)
   disc_hoa_exists: 'HOA Exists',
   disc_lead_paint: 'Lead Paint Disclosure',
   disc_mineral_rights: 'Mineral Rights Severed',
@@ -109,37 +109,6 @@ export const CANONICAL_FIELDS = {
   disc_septic: 'Has Septic System',
   disc_well: 'Has Private Well',
   disc_renovations: 'Has Unpermitted Renovations',
-  disc_env_hazards: 'Environmental Hazards',
-  disc_wetlands: 'Wetlands Present',
-  disc_foundation_defects: 'Foundation Defects',
-  disc_roof_defects: 'Roof Defects',
-  disc_pest_damage: 'Pest/Termite Damage',
-  disc_hvac_defects: 'HVAC Defects',
-  disc_plumbing_defects: 'Plumbing Defects',
-  disc_electrical_defects: 'Electrical Defects',
-  disc_code_violations: 'Code Violations',
-  disc_boundary_disputes: 'Boundary Disputes',
-  disc_pending_lawsuits: 'Pending Lawsuits',
-  disc_additional_defects: 'Additional Defects',
-
-  // Net Sheet / Financial
-  mortgage_payoff: 'Mortgage Payoff Amount',
-  tax_proration: 'Tax Proration',
-  hoa_transfer_fee: 'HOA Transfer Fee',
-  closing_fees: 'Closing Fees',
-  excise_tax: 'Excise Tax',
-  repair_credits: 'Repair Credits',
-  other_costs: 'Other Costs',
-  estimated_net_proceeds: 'Estimated Net Proceeds',
-  commission_amount: 'Commission Amount',
-  seller_paid_closing: 'Seller Paid Closing Costs',
-
-  // Buyer Agency
-  property_area: 'Property Search Area',
-  purchase_price_range: 'Purchase Price Range',
-  buyer_commission: 'Buyer Agent Commission',
-  compensation_source: 'Compensation Source',
-  additional_terms: 'Additional Terms',
 } as const
 
 export type CanonicalKey = keyof typeof CANONICAL_FIELDS

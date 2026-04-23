@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, FormEvent } from 'react'
+import { getCsrfToken } from '@/lib/csrf-client'
 
 type Agent = {
   id: string
@@ -45,8 +46,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function SettingsPage() {
   const [agent, setAgent] = useState<Agent | null>(null)
   const [loading, setLoading] = useState(true)
-  const [csrfToken, setCsrfToken] = useState('')
-
   // Profile fields
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -69,10 +68,7 @@ export default function SettingsPage() {
   const [pwMsg, setPwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/auth/me').then((r) => r.json()),
-      fetch('/api/csrf').then((r) => r.json()),
-    ]).then(([agentData, csrfData]) => {
+    fetch('/api/auth/me').then((r) => r.json()).then((agentData) => {
       const a = (agentData as { agent?: Agent }).agent
       if (a) {
         setAgent(a)
@@ -84,7 +80,6 @@ export default function SettingsPage() {
         setFirmPhone(a.firmPhone ?? '')
         setFirmLicense(a.firmLicense ?? '')
       }
-      setCsrfToken((csrfData as { token?: string }).token ?? '')
     }).finally(() => setLoading(false))
   }, [])
 
@@ -93,6 +88,7 @@ export default function SettingsPage() {
     setProfileSaving(true)
     setProfileMsg(null)
 
+    const csrfToken = await getCsrfToken()
     const res = await fetch('/api/auth/me', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
@@ -106,8 +102,6 @@ export default function SettingsPage() {
     } else {
       if (data.agent) setAgent(data.agent)
       setProfileMsg({ type: 'success', text: 'Profile saved successfully.' })
-      // Refresh CSRF token after use
-      fetch('/api/csrf').then((r) => r.json()).then((d: { token?: string }) => setCsrfToken(d.token ?? ''))
     }
   }
 
@@ -125,13 +119,10 @@ export default function SettingsPage() {
     setPwSaving(true)
     setPwMsg(null)
 
-    // Re-fetch CSRF for password change
-    const csrfRes = await fetch('/api/csrf').then((r) => r.json()) as { token?: string }
-    const token = csrfRes.token ?? ''
-
+    const csrfToken = await getCsrfToken()
     const res = await fetch('/api/auth/me', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'x-csrf-token': token },
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
       body: JSON.stringify({ currentPassword, newPassword }),
     })
     const data = await res.json() as { error?: string }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { getCsrfToken } from '@/lib/csrf-client'
 
 type FormTemplate = {
   id: string
@@ -57,9 +58,10 @@ export default function EditFormPage() {
     setSaveError('')
     setSaved(false)
 
+    const csrfToken = await getCsrfToken()
     const res = await fetch(`/api/forms/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
       body: JSON.stringify({
         formName: formName.trim(),
         version: version.trim(),

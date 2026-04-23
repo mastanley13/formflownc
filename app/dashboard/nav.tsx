@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { getCsrfToken } from '@/lib/csrf-client'
 
 export default function DashboardNav({ agentName }: { agentName: string }) {
   const pathname = usePathname()
@@ -10,7 +11,11 @@ export default function DashboardNav({ agentName }: { agentName: string }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' })
+    const csrfToken = await getCsrfToken()
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { 'x-csrf-token': csrfToken },
+    })
     router.push('/login')
     router.refresh()
   }

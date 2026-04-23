@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { getCsrfToken } from '@/lib/csrf-client'
 
 type FormTemplate = {
   id: string
@@ -28,9 +29,10 @@ export default function FormsPage() {
 
   async function toggleActive(form: FormTemplate) {
     setToggling(form.id)
+    const csrfToken = await getCsrfToken()
     const res = await fetch(`/api/forms/${form.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
       body: JSON.stringify({ isActive: !form.isActive }),
     })
     if (res.ok) {
@@ -43,7 +45,11 @@ export default function FormsPage() {
 
   async function deleteForm(form: FormTemplate) {
     if (!confirm(`Delete form ${form.formNumber} — ${form.formName}? This cannot be undone.`)) return
-    const res = await fetch(`/api/forms/${form.id}`, { method: 'DELETE' })
+    const csrfToken = await getCsrfToken()
+    const res = await fetch(`/api/forms/${form.id}`, {
+      method: 'DELETE',
+      headers: { 'x-csrf-token': csrfToken },
+    })
     if (res.ok) {
       setForms((prev) => prev.filter((f) => f.id !== form.id))
     }

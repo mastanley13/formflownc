@@ -72,14 +72,25 @@ export async function POST(request: Request, ctx: RouteContext<'/api/intake/[tok
       return Response.json({ error: 'clientData must be an object.' }, { status: 400 })
     }
     // Allow only string values keyed by known canonical field names (basic allowlist check)
+    // Raised limits to accommodate full Form 170 disclosure + explanation fields
     clientData = Object.fromEntries(
       Object.entries(body as Record<string, unknown>)
-        .filter(([k, v]) => typeof k === 'string' && k.length <= 64 && typeof v === 'string' && (v as string).length <= 1024)
+        .filter(([k, v]) => typeof k === 'string' && k.length <= 64 && typeof v === 'string' && (v as string).length <= 2048)
         .map(([k, v]) => [k, v as string])
-        .slice(0, 100)
+        .slice(0, 200)
     )
   } catch {
     return Response.json({ error: 'Invalid JSON body.' }, { status: 400 })
+  }
+
+  // Auto-save: persist data without advancing status or triggering PDF generation
+  const isAutoSave = request.headers.get('x-auto-save') === '1'
+  if (isAutoSave) {
+    await prisma.package.update({
+      where: { id: pkg.id },
+      data: { clientData: JSON.stringify(clientData) },
+    })
+    return Response.json({ ok: true, autoSaved: true })
   }
 
   // Save client data and advance to client_completed
