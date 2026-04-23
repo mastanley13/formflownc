@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 const COOKIE_NAME = 'ffnc_session'
 const PUBLIC_PATHS = ['/login', '/register', '/intake', '/api/auth', '/api/intake', '/_next', '/favicon']
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p)) || pathname === '/'

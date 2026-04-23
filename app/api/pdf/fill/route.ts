@@ -6,10 +6,14 @@
 //   'flatten'  - optional 'true' to flatten form fields
 // Returns: filled PDF binary (application/pdf)
 
+import { getSession } from '@/lib/auth'
 import { fillPdf } from '@/lib/pdf-engine'
 import type { PdfFieldMap, CollectedData } from '@/lib/pdf-engine'
 
 export async function POST(request: Request) {
+  const session = await getSession()
+  if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
   try {
     const formData = await request.formData()
     const file = formData.get('pdf') as File | null

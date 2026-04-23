@@ -2,9 +2,13 @@
 // Body: multipart/form-data with 'pdf' file field
 // Returns: JSON list of AcroForm fields detected in the PDF
 
+import { getSession } from '@/lib/auth'
 import { detectPdfFields } from '@/lib/pdf-engine'
 
 export async function POST(request: Request) {
+  const session = await getSession()
+  if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
   try {
     const formData = await request.formData()
     const file = formData.get('pdf') as File | null

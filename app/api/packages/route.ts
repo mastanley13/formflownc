@@ -1,7 +1,10 @@
 import { getSession } from '@/lib/auth'
+import { verifyCsrfToken } from '@/lib/csrf'
 import prisma from '@/lib/db'
 import { sendPackageCreatedEmail } from '@/lib/email'
 import { v4 as uuidv4 } from 'uuid'
+
+const CSRF_HEADER = 'x-csrf-token'
 
 export async function GET() {
   const session = await getSession()
@@ -19,6 +22,11 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await getSession()
   if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
+  const csrfToken = request.headers.get(CSRF_HEADER) ?? ''
+  if (!verifyCsrfToken(csrfToken, session.agentId)) {
+    return Response.json({ error: 'Invalid CSRF token.' }, { status: 403 })
+  }
 
   try {
     const body = await request.json()

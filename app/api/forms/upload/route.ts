@@ -1,13 +1,16 @@
 // POST /api/forms/upload
 // Accepts multipart/form-data: pdf (file), formNumber, formName, category (JSON), version
 // Saves PDF to uploads/forms/, runs field detection, returns detected fields.
-// Does NOT create the DB record — the client reviews mappings first, then POSTs /api/forms.
+// Does NOT create the DB record -- the client reviews mappings first, then POSTs /api/forms.
 
 import { getSession } from '@/lib/auth'
+import { verifyCsrfToken } from '@/lib/csrf'
 import { detectPdfFields } from '@/lib/pdf-engine'
 import { CANONICAL_FIELDS } from '@/lib/pdf-engine/types'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
+
+const CSRF_HEADER = 'x-csrf-token'
 
 function sanitizeFilename(s: string): string {
   return s.replace(/[^a-z0-9-]/gi, '-').toLowerCase().replace(/-+/g, '-')
@@ -28,6 +31,11 @@ function suggestCanonicalKey(pdfFieldName: string): string | null {
 export async function POST(request: Request) {
   const session = await getSession()
   if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
+  const csrfToken = request.headers.get(CSRF_HEADER) ?? ''
+  if (!verifyCsrfToken(csrfToken, session.agentId)) {
+    return Response.json({ error: 'Invalid CSRF token.' }, { status: 403 })
+  }
 
   try {
     const formData = await request.formData()

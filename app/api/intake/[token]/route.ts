@@ -93,7 +93,7 @@ export async function POST(request: Request, ctx: RouteContext<'/api/intake/[tok
 
   // Trigger PDF generation + optional DocuSeal submission via internal API
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
     const genRes = await fetch(`${baseUrl}/api/packages/${pkg.id}/generate-pdfs`, {
       method: 'POST',
       headers: { 'x-internal-token': process.env.INTERNAL_API_TOKEN ?? '' },

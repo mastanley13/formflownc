@@ -57,7 +57,7 @@ DOCUSEAL_API_TOKEN=your_api_token_here
 DOCUSEAL_WEBHOOK_SECRET=your_webhook_secret_here
 
 # Used by intake route to call generate-pdfs internally
-NEXT_PUBLIC_BASE_URL=https://your-formflownc-domain.com
+NEXT_PUBLIC_APP_URL=https://your-formflownc-domain.com
 INTERNAL_API_TOKEN=a_long_random_secret_string
 ```
 

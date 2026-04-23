@@ -1,5 +1,8 @@
 import { getSession } from '@/lib/auth'
+import { verifyCsrfToken } from '@/lib/csrf'
 import prisma from '@/lib/db'
+
+const CSRF_HEADER = 'x-csrf-token'
 
 export async function GET(_req: Request, ctx: RouteContext<'/api/forms/[id]'>) {
   const session = await getSession()
@@ -16,6 +19,11 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/forms/[id]'>) {
 export async function PATCH(request: Request, ctx: RouteContext<'/api/forms/[id]'>) {
   const session = await getSession()
   if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
+  const csrfToken = request.headers.get(CSRF_HEADER) ?? ''
+  if (!verifyCsrfToken(csrfToken, session.agentId)) {
+    return Response.json({ error: 'Invalid CSRF token.' }, { status: 403 })
+  }
 
   const { id } = await ctx.params
   const body = await request.json()
@@ -46,9 +54,14 @@ export async function PATCH(request: Request, ctx: RouteContext<'/api/forms/[id]
   }
 }
 
-export async function DELETE(_req: Request, ctx: RouteContext<'/api/forms/[id]'>) {
+export async function DELETE(request: Request, ctx: RouteContext<'/api/forms/[id]'>) {
   const session = await getSession()
   if (!session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
+
+  const csrfToken = request.headers.get(CSRF_HEADER) ?? ''
+  if (!verifyCsrfToken(csrfToken, session.agentId)) {
+    return Response.json({ error: 'Invalid CSRF token.' }, { status: 403 })
+  }
 
   const { id } = await ctx.params
   try {
