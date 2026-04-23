@@ -9,6 +9,24 @@ export {
   createForm110Pdf,
   createForm170Pdf,
 } from './create-test-pdf'
-export { getMappingForForm, buildReverseMapping, FORM_MAPPINGS, FORM_101_MAPPING, FORM_2T_MAPPING, FORM_4_MAPPING } from './field-mappings'
-export type { PdfField, PdfFieldType, PdfFieldMap, CollectedData, FillResult, CanonicalKey } from './types'
+export {
+  getMappingForForm,
+  buildReverseMapping,
+  FORM_MAPPINGS,
+  FORM_101_MAPPING,
+  FORM_2T_MAPPING,
+  FORM_161_MAPPING,
+  FORM_140_MAPPING,
+  FORM_141_MAPPING,
+  FORM_110_MAPPING,
+  FORM_170_MAPPING,
+} from './field-mappings'
+export type {
+  PdfField,
+  PdfFieldType,
+  PdfFieldMap,
+  CollectedData,
+  FillResult,
+  CanonicalKey,
+} from './types'
 export { CANONICAL_FIELDS } from './types'

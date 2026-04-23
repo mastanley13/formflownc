@@ -5,7 +5,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const uploadsDir = join(__dirname, '../../../../uploads')
+const uploadsDir = join(__dirname, '../../../../uploads/forms')
 
 const files = readdirSync(uploadsDir)
   .filter(f => f.endsWith('.pdf'))

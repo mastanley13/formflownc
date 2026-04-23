@@ -1,4 +1,5 @@
 import prisma from '@/lib/db'
+import { generatePackagePdfs } from '@/lib/generate-package-pdfs'
 
 async function resolvePackage(token: string) {
   return prisma.package.findUnique({
@@ -102,19 +103,13 @@ export async function POST(request: Request, ctx: RouteContext<'/api/intake/[tok
     },
   })
 
-  // Trigger PDF generation + optional DocuSeal submission via internal API
+  // Generate PDFs + optional DocuSeal submission directly (no self-fetch)
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const genRes = await fetch(`${baseUrl}/api/packages/${pkg.id}/generate-pdfs`, {
-      method: 'POST',
-      headers: { 'x-internal-token': process.env.INTERNAL_API_TOKEN ?? '' },
-    })
-    if (genRes.ok) {
-      const genData = await genRes.json() as { status?: string; fillResults?: unknown }
-      return Response.json({ ok: true, fillResults: genData.fillResults, status: genData.status })
-    }
-  } catch {
-    // Non-fatal — client data is saved; agent can regenerate manually
+    const result = await generatePackagePdfs(pkg.id)
+    return Response.json({ ok: true, fillResults: result.fillResults, status: result.status })
+  } catch (e) {
+    console.error('[intake] PDF generation failed:', e)
+    // Non-fatal -- client data is saved; agent can regenerate manually
   }
 
   return Response.json({ ok: true, status: 'client_completed' })

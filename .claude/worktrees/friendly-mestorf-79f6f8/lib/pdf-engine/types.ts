@@ -101,7 +101,7 @@ export const CANONICAL_FIELDS = {
   selling_agent_phone: 'Selling Agent Phone',
   selling_agent_firm: 'Selling Agent Firm',
 
-  // Disclosures (checkbox)
+  // Disclosures
   disc_hoa_exists: 'HOA Exists',
   disc_lead_paint: 'Lead Paint Disclosure',
   disc_mineral_rights: 'Mineral Rights Severed',
@@ -109,6 +109,53 @@ export const CANONICAL_FIELDS = {
   disc_septic: 'Has Septic System',
   disc_well: 'Has Private Well',
   disc_renovations: 'Has Unpermitted Renovations',
+  disc_environmental_hazards: 'Environmental Hazards',
+  disc_wetlands: 'Wetlands',
+  disc_foundation_defects: 'Foundation Defects',
+  disc_roof_defects: 'Roof Defects',
+  disc_pest_damage: 'Pest/Termite Damage',
+  disc_hvac_defects: 'HVAC Defects',
+  disc_plumbing_defects: 'Plumbing Defects',
+  disc_electrical_defects: 'Electrical Defects',
+  disc_code_violations: 'Code Violations',
+  disc_boundary_disputes: 'Boundary Disputes',
+  disc_pending_lawsuits: 'Pending Lawsuits',
+  disc_additional_defects: 'Additional Defects (describe)',
+
+  // Seller Net Sheet financial fields
+  net_sheet_prepared_date: 'Net Sheet Prepared Date',
+  net_mortgage_payoff: 'Mortgage Payoff',
+  net_tax_proration: 'Tax Proration',
+  net_hoa_transfer_fee: 'HOA Transfer Fee',
+  net_closing_fees: 'Closing Fees',
+  net_excise_tax: 'Excise Tax',
+  net_seller_paid_closing: 'Seller-Paid Closing Costs',
+  net_repair_credits: 'Repair Credits',
+  net_other_costs: 'Other Costs',
+  net_estimated_proceeds: 'Estimated Net Proceeds',
+  net_commission_total: 'Total Commission Amount',
+
+  // Buyer Agency Agreement fields
+  buyer_agency_start_date: 'Buyer Agency Start Date',
+  buyer_agency_end_date: 'Buyer Agency End Date',
+  buyer_price_range: 'Target Purchase Price Range',
+  buyer_commission_pct: 'Buyer Agent Commission %',
+  buyer_compensation_source: 'Compensation Source',
+  additional_terms: 'Additional Terms',
+  property_area: 'Target Property Area/County',
+
+  // Signature fields (filled by DocuSeal, not by client intake)
+  seller_1_signature: 'Seller 1 Signature',
+  seller_2_signature: 'Seller 2 Signature',
+  buyer_1_signature: 'Buyer 1 Signature',
+  buyer_2_signature: 'Buyer 2 Signature',
+  agent_signature: 'Agent Signature',
+  firm_signature: 'Firm Signature',
+  seller_1_sign_date: 'Seller 1 Sign Date',
+  seller_2_sign_date: 'Seller 2 Sign Date',
+  buyer_1_sign_date: 'Buyer 1 Sign Date',
+  buyer_2_sign_date: 'Buyer 2 Sign Date',
+  agent_sign_date: 'Agent Sign Date',
 } as const
 
 export type CanonicalKey = keyof typeof CANONICAL_FIELDS
