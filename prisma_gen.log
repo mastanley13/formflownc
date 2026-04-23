@@ -1,0 +1,21 @@
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.8.0) to .\lib\generated\prisma in 68ms
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+The database is already in sync with the Prisma schema.
+
+
+> formflownc@0.1.0 db:seed
+> dotenv -e .env -- npx tsx prisma/seed.ts
+
+Usage: dotenv [OPTIONS] COMMAND [ARGS]...
+Try 'dotenv --help' for help.
+
+Error: Invalid value for '-e' / '--export': '.env' is not a valid boolean.
