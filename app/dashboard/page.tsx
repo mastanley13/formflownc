@@ -99,22 +99,30 @@ export default async function DashboardPage() {
               const displayStatus = isExpired && !['completed'].includes(pkg.status) ? 'expired' : pkg.status
 
               return (
-                <div key={pkg.id} className="flex items-start gap-4 px-6 py-4 hover:bg-slate-50 transition group">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <p className="font-semibold text-slate-900 truncate">{pkg.propertyAddress}</p>
+                <div key={pkg.id} className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-slate-50 transition">
+                  <Link href={`/dashboard/packages/${pkg.id}`} className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <p className="font-semibold text-slate-900 truncate text-sm sm:text-base">{pkg.propertyAddress}</p>
                       <StatusBadge status={displayStatus} />
                     </div>
                     {signerNames && (
                       <p className="text-sm text-slate-500 mt-0.5 truncate">{signerNames}</p>
                     )}
                     <p className="text-xs text-slate-400 mt-1">Created {formatDate(pkg.createdAt)}</p>
-                  </div>
+                  </Link>
 
                   <div className="flex items-center gap-2 shrink-0">
                     {pkg.status === 'link_sent' || pkg.status === 'draft' ? (
                       <CopyLinkButton token={pkg.clientLinkToken} />
                     ) : null}
+                    <Link
+                      href={`/dashboard/packages/${pkg.id}`}
+                      className="text-slate-300 hover:text-slate-500 transition p-1 hidden sm:block"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
                   </div>
                 </div>
               )

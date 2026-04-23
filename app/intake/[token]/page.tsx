@@ -49,7 +49,7 @@ function YesNoField({ name, label, value, onChange }: { name: string; label: str
             key={opt}
             type="button"
             onClick={() => onChange(opt)}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg border transition ${
+            className={`flex-1 py-3 text-sm font-semibold rounded-lg border transition ${
               value === opt
                 ? 'bg-teal-600 text-white border-teal-600'
                 : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'

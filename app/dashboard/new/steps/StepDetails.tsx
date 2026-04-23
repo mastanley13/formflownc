@@ -162,8 +162,8 @@ export default function StepDetails({
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <button type="button" onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-2.5 rounded-xl hover:bg-slate-100 transition">← Back</button>
-        <button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition">Continue →</button>
+        <button type="button" onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-3 rounded-xl hover:bg-slate-100 transition">← Back</button>
+        <button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition">Continue →</button>
       </div>
     </form>
   )

@@ -118,14 +118,14 @@ export default function StepForms({
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       <div className="flex items-center justify-between pt-2">
-        <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-2.5 rounded-xl hover:bg-slate-100 transition">
+        <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-3 rounded-xl hover:bg-slate-100 transition">
           ← Back
         </button>
         <div className="flex items-center gap-3">
           {selected.size > 0 && (
             <span className="text-sm text-teal-700 font-medium">{selected.size} form{selected.size > 1 ? 's' : ''} selected</span>
           )}
-          <button onClick={handleContinue} className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition">
+          <button onClick={handleContinue} className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition">
             Continue →
           </button>
         </div>

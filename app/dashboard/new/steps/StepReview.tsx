@@ -102,7 +102,7 @@ export default function StepReview({
       )}
 
       <div className="flex items-center justify-between pt-2">
-        <button onClick={onBack} disabled={submitting} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-2.5 rounded-xl hover:bg-slate-100 transition disabled:opacity-50">← Back</button>
+        <button onClick={onBack} disabled={submitting} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-3 rounded-xl hover:bg-slate-100 transition disabled:opacity-50">← Back</button>
         <button
           onClick={onSubmit}
           disabled={submitting}

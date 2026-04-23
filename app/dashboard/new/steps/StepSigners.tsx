@@ -116,7 +116,7 @@ export default function StepSigners({
                 <p className="font-medium text-slate-900 text-sm truncate">{s.name}</p>
                 <p className="text-xs text-slate-500 truncate">{s.email} · <span className="text-teal-600">{roleLabel(s.role)}</span></p>
               </div>
-              <button onClick={() => removeSigner(s.id)} className="text-slate-400 hover:text-red-500 transition p-1" title="Remove">
+              <button onClick={() => removeSigner(s.id)} className="text-slate-400 hover:text-red-500 transition p-2.5 -mr-1" title="Remove">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -144,8 +144,8 @@ export default function StepSigners({
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
       <div className="flex items-center justify-between pt-2">
-        <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-2.5 rounded-xl hover:bg-slate-100 transition">← Back</button>
-        <button onClick={handleContinue} className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition">Continue →</button>
+        <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-700 font-medium px-4 py-3 rounded-xl hover:bg-slate-100 transition">← Back</button>
+        <button onClick={handleContinue} className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition">Continue →</button>
       </div>
     </div>
   )
