@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     const version = (formData.get('version') as string | null)?.trim() ?? '2024'
 
     if (!file) return Response.json({ error: 'No PDF file provided.' }, { status: 400 })
+    if (file.size > 50 * 1024 * 1024) return Response.json({ error: 'PDF must be under 50 MB.' }, { status: 413 })
     if (!formNumber) return Response.json({ error: 'formNumber is required.' }, { status: 400 })
     if (!formName) return Response.json({ error: 'formName is required.' }, { status: 400 })
 
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
       fields: fieldsWithSuggestions,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return Response.json({ error: `Upload failed: ${message}` }, { status: 500 })
+    console.error('[forms/upload] Unexpected error:', err)
+    return Response.json({ error: 'Upload failed. Check server logs for details.' }, { status: 500 })
   }
 }

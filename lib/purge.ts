@@ -10,12 +10,14 @@ export type PurgeResult = {
 
 // Deletes packages that have expired (clientLinkExpiresAt < now)
 // and are not in a terminal state (completed).
-// Also removes any associated filled PDF files from the filesystem.
-export async function purgeExpiredPackages(): Promise<PurgeResult> {
+// Wipes client PII from package data and signer records, and deletes filled PDFs.
+// agentId scopes the purge to one agent's packages.
+export async function purgeExpiredPackages(agentId?: string): Promise<PurgeResult> {
   const expired = await prisma.package.findMany({
     where: {
       clientLinkExpiresAt: { lt: new Date() },
       status: { notIn: ['completed'] },
+      ...(agentId ? { agentId } : {}),
     },
     select: { id: true, status: true },
   })
@@ -27,7 +29,6 @@ export async function purgeExpiredPackages(): Promise<PurgeResult> {
   const ids = expired.map((p) => p.id)
   const errors: string[] = []
 
-  // Delete filled PDF files for each package
   for (const id of ids) {
     const dir = path.join(process.cwd(), 'uploads', 'filled', id)
     try {
@@ -37,12 +38,22 @@ export async function purgeExpiredPackages(): Promise<PurgeResult> {
     }
   }
 
-  // Mark packages as expired in DB (cascade deletes signers)
+  // Wipe signer PII
+  await prisma.packageSigner.updateMany({
+    where: { packageId: { in: ids } },
+    data: {
+      name: '[purged]',
+      email: 'purged@purged.invalid',
+      phone: null,
+    },
+  })
+
+  // Mark packages as expired and wipe package-level PII
   await prisma.package.updateMany({
     where: { id: { in: ids } },
     data: {
       status: 'expired',
-      clientData: '{}', // wipe client PII
+      clientData: '{}',
       agentData: '{}',
     },
   })

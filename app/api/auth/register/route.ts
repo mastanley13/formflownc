@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       agent: { id: agent.id, email: agent.email, name: agent.name },
     }, { status: 201 })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return Response.json({ error: message }, { status: 500 })
+    console.error('[register] Unexpected error:', err)
+    return Response.json({ error: 'Internal server error.' }, { status: 500 })
   }
 }

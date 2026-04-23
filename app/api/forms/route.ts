@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
     return Response.json({ form }, { status: 201 })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return Response.json({ error: message }, { status: 500 })
+    console.error('[forms POST] Unexpected error:', err)
+    return Response.json({ error: 'Internal server error.' }, { status: 500 })
   }
 }

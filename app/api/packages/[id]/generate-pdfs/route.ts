@@ -8,14 +8,16 @@ import { fillPdf } from '@/lib/pdf-engine'
 import type { CollectedData } from '@/lib/pdf-engine'
 import { createSubmission } from '@/lib/docuseal'
 import type { DocuSealDocument, DocuSealSigner } from '@/lib/docuseal'
-import { buildZipFromBuffers } from '@/lib/zip'
 import { readFile, writeFile, mkdir } from 'fs/promises'
 import path from 'path'
+
+const INTERNAL_API_TOKEN = process.env.INTERNAL_API_TOKEN
+if (!INTERNAL_API_TOKEN) throw new Error('INTERNAL_API_TOKEN environment variable is not set')
 
 export async function POST(req: Request, ctx: RouteContext<'/api/packages/[id]/generate-pdfs'>) {
   // Accept either an authenticated session or an internal server-to-server token
   const internalToken = req.headers.get('x-internal-token')
-  const isInternal = internalToken && internalToken === process.env.INTERNAL_API_TOKEN && internalToken !== ''
+  const isInternal = Boolean(internalToken && internalToken === INTERNAL_API_TOKEN)
   const session = isInternal ? null : await getSession()
   if (!isInternal && !session) return Response.json({ error: 'Not authenticated.' }, { status: 401 })
 
@@ -28,11 +30,18 @@ export async function POST(req: Request, ctx: RouteContext<'/api/packages/[id]/g
   if (!pkg) return Response.json({ error: 'Package not found.' }, { status: 404 })
   if (session && pkg.agentId !== session.agentId) return Response.json({ error: 'Not authorized.' }, { status: 403 })
 
-  const formIds: string[] = JSON.parse(pkg.formsSelected)
-  const templates = await prisma.formTemplate.findMany({ where: { id: { in: formIds } } })
+  let formIds: string[]
+  let agentData: CollectedData
+  let clientData: CollectedData
+  try {
+    formIds = JSON.parse(pkg.formsSelected) as string[]
+    agentData = JSON.parse(pkg.agentData) as CollectedData
+    clientData = JSON.parse(pkg.clientData) as CollectedData
+  } catch {
+    return Response.json({ error: 'Package data is corrupt.' }, { status: 500 })
+  }
 
-  const agentData = JSON.parse(pkg.agentData) as CollectedData
-  const clientData = JSON.parse(pkg.clientData) as CollectedData
+  const templates = await prisma.formTemplate.findMany({ where: { id: { in: formIds } } })
   const mergedData: CollectedData = { ...agentData, ...clientData }
 
   const outDir = path.join(process.cwd(), 'uploads', 'filled', id)
@@ -105,13 +114,6 @@ export async function POST(req: Request, ctx: RouteContext<'/api/packages/[id]/g
     where: { id },
     data: { status: newStatus },
   })
-
-  // Build zip for immediate download response
-  const zipFiles = fillResults
-    .filter((r) => r.status === 'filled')
-    .map((r) => ({ filename: r.filename, bytes: Buffer.alloc(0) })) // placeholder; client will call /download
-
-  void zipFiles // suppress unused warning
 
   return Response.json({
     ok: true,

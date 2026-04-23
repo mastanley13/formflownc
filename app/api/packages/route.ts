@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/auth'
 import prisma from '@/lib/db'
+import { sendPackageCreatedEmail } from '@/lib/email'
 import { v4 as uuidv4 } from 'uuid'
 
 export async function GET() {
@@ -61,9 +62,23 @@ export async function POST(request: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const clientLink = `${appUrl}/intake/${token}`
 
+    const agent = await prisma.agent.findUnique({
+      where: { id: session.agentId },
+      select: { name: true, email: true },
+    })
+    if (agent) {
+      sendPackageCreatedEmail({
+        agentEmail: agent.email,
+        agentName: agent.name,
+        propertyAddress: propertyAddress.trim(),
+        clientLink,
+        expiresAt,
+      }).catch((e) => console.error('[email] Package created email failed:', e))
+    }
+
     return Response.json({ package: pkg, clientLink }, { status: 201 })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return Response.json({ error: message }, { status: 500 })
+    console.error('[packages POST] Unexpected error:', err)
+    return Response.json({ error: 'Internal server error.' }, { status: 500 })
   }
 }

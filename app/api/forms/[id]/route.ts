@@ -30,7 +30,13 @@ export async function PATCH(request: Request, ctx: RouteContext<'/api/forms/[id]
       ? body.fieldMappings
       : JSON.stringify(body.fieldMappings)
   }
-  if (body.pdfFilePath !== undefined) updateData.pdfFilePath = body.pdfFilePath
+  if (body.pdfFilePath !== undefined) {
+    const p = String(body.pdfFilePath)
+    if (p.includes('..') || p.startsWith('/') || p.startsWith('\\') || !/^uploads[\\/]forms[\\/]/.test(p)) {
+      return Response.json({ error: 'Invalid pdfFilePath.' }, { status: 400 })
+    }
+    updateData.pdfFilePath = p
+  }
 
   try {
     const form = await prisma.formTemplate.update({ where: { id }, data: updateData })

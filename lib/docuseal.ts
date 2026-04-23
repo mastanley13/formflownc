@@ -114,7 +114,9 @@ export type DocuSealWebhookEvent = {
   event_type: 'submission.completed' | 'submitter.completed' | string
   timestamp: string
   data: {
-    id: number           // submission ID
+    id: number               // submission ID (submission.completed) OR submitter ID (submitter.completed)
+    submission_id?: number   // parent submission ID — only present on submitter.completed
+    email?: string           // submitter email — present on submitter.completed
     status: string
     submitters: Array<{ email: string; status: string }>
   }
