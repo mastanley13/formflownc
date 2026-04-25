@@ -36,6 +36,10 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Include PDF form templates in serverless function bundles
+  outputFileTracingIncludes: {
+    '/api/**': ['./uploads/forms/**/*.pdf'],
+  },
   async headers() {
     return [
       {

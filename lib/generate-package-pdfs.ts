@@ -45,7 +45,9 @@ export async function generatePackagePdfs(packageId: string): Promise<GenerateRe
   const templates = await prisma.formTemplate.findMany({ where: { id: { in: formIds } } })
   const mergedData: CollectedData = { ...agentData, ...clientData }
 
-  const outDir = path.join(process.cwd(), 'uploads', 'filled', packageId)
+  // Use /tmp on Vercel (read-only filesystem), local dir otherwise
+  const baseDir = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'uploads', 'filled')
+  const outDir = path.join(baseDir, packageId)
   await mkdir(outDir, { recursive: true })
 
   const fillResults: GenerateResult['fillResults'] = []

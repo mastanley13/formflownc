@@ -20,7 +20,9 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/packages/[id]/d
   if (!pkg) return Response.json({ error: 'Package not found.' }, { status: 404 })
   if (pkg.agentId !== session.agentId) return Response.json({ error: 'Not authorized.' }, { status: 403 })
 
-  const filledDir = path.join(process.cwd(), 'uploads', 'filled', id)
+  // Use /tmp on Vercel (read-only filesystem), local dir otherwise
+  const baseDir = process.env.VERCEL ? '/tmp' : path.join(process.cwd(), 'uploads', 'filled')
+  const filledDir = path.join(baseDir, id)
   const address = pkg.propertyAddress.replace(/[^a-z0-9 ]/gi, '').replace(/\s+/g, '-').toLowerCase()
   const zipFilename = `formflownc-${address}.zip`
 
