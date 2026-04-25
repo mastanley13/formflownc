@@ -50,8 +50,12 @@ next-env.d.ts
 /dev.db
 /dev.db-journal
 
-# uploads (binary PDFs — not version controlled)
+# uploads — track form template PDFs, ignore runtime-generated filled PDFs
 /uploads/filled/
-# Keep uploads/forms/ tracked if desired, but exclude actual PDF binaries
-/uploads/forms/*.pdf
+# Keep the 6 core fillable form PDFs tracked for deployment
+# Exclude large reference/markedup copies
+/uploads/forms/ListingPacket-*.pdf
+/uploads/forms/NCAR-*.pdf
+/uploads/forms/NCREC-*.pdf
+/uploads/forms/Superior-*.pdf
 .claude/worktrees/
