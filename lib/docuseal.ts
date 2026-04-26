@@ -4,6 +4,7 @@
 // If DOCUSEAL_API_URL is not set, all calls are no-ops and packages skip
 // straight to "completed" after PDF generation.
 //
+// Flow: update template with filled PDFs → create submission → signer gets email
 // DocuSeal self-hosted setup: see DOCUSEAL_SETUP.md
 
 export type DocuSealSigner = {
@@ -59,21 +60,33 @@ function templateId(): number {
   return parseInt(id, 10)
 }
 
-// Create a submission using a pre-configured DocuSeal template.
-//
-// The template must be created in the DocuSeal admin UI with signature/date
-// fields. Each submission sends the template document to signers for signing.
-//
-// DocuSeal open-source API:
-// POST /api/submissions — creates submission for an existing template
-// Body: { template_id, submitters: [...], send_email: true }
-export async function createSubmission(
-  documents: DocuSealDocument[],
+// Step 1: Replace the template's document(s) with the filled PDFs.
+// PUT /api/templates/:id — accepts { documents: [{ name, file }] }
+// The "file" is a data URI with base64-encoded PDF bytes.
+async function updateTemplateDocuments(documents: DocuSealDocument[]): Promise<void> {
+  const docPayload = documents.map((d) => ({
+    name: d.name,
+    file: `data:application/pdf;base64,${d.bytes.toString('base64')}`,
+  }))
+
+  const res = await fetch(`${baseUrl()}/api/templates/${templateId()}`, {
+    method: 'PUT',
+    headers: headers(),
+    body: JSON.stringify({ documents: docPayload }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`DocuSeal template update failed (${res.status}): ${err}`)
+  }
+}
+
+// Step 2: Create a submission against the (now-updated) template.
+// POST /api/submissions — { template_id, submitters, send_email }
+async function createSubmissionForTemplate(
   signers: DocuSealSigner[],
   message?: string
-): Promise<DocuSealSubmissionResult | null> {
-  if (!isConfigured()) return null
-
+): Promise<DocuSealSubmissionResult> {
   const submitterPayload = signers.map((s) => ({
     name: s.name,
     email: s.email,
@@ -98,7 +111,7 @@ export async function createSubmission(
     throw new Error(`DocuSeal submission failed (${res.status}): ${err}`)
   }
 
-  // The API returns an array of submitter objects; wrap into our result shape
+  // The API returns an array of submitter objects
   const submitters = await res.json() as Array<{
     id: number
     email: string
@@ -124,6 +137,27 @@ export async function createSubmission(
     status: 'pending',
     createdAt: new Date().toISOString(),
   }
+}
+
+// Main entry point: update template with filled documents, then create submission.
+// This two-step approach works with DocuSeal's open-source edition.
+export async function createSubmission(
+  documents: DocuSealDocument[],
+  signers: DocuSealSigner[],
+  message?: string
+): Promise<DocuSealSubmissionResult | null> {
+  if (!isConfigured()) return null
+
+  // Step 1: Replace template documents with the actual filled PDFs
+  console.log(`[docuseal] Updating template ${templateId()} with ${documents.length} filled PDF(s)`)
+  await updateTemplateDocuments(documents)
+
+  // Step 2: Create submission — signer gets the real filled documents
+  console.log(`[docuseal] Creating submission for ${signers.length} signer(s)`)
+  const result = await createSubmissionForTemplate(signers, message)
+  console.log(`[docuseal] Submission ${result.id} created, status: ${result.status}`)
+
+  return result
 }
 
 export async function getSubmissionStatus(submissionId: number): Promise<DocuSealSubmissionStatus | null> {
