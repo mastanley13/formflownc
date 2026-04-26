@@ -92,7 +92,7 @@ export async function createSubmission(
       template_id: Number(templateId),
       documents: docPayload,
       submitters: submitterPayload,
-      send_email: false,
+      send_email: true,
     }),
   })
 

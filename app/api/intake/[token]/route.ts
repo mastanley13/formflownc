@@ -108,7 +108,28 @@ export async function POST(request: Request, ctx: RouteContext<'/api/intake/[tok
   // Generate PDFs + optional DocuSeal submission directly (no self-fetch)
   try {
     const result = await generatePackagePdfs(pkg.id)
-    return Response.json({ ok: true, fillResults: result.fillResults, status: result.status })
+
+    // Build signing URLs for each signer
+    let signingUrls: Array<{ name: string; email: string; url: string }> = []
+    if (result.status === 'signing' && process.env.DOCUSEAL_API_URL) {
+      const signers = await prisma.packageSigner.findMany({
+        where: { packageId: pkg.id },
+        select: { name: true, email: true, docusealSubmissionId: true },
+      })
+      signingUrls = signers
+        .filter((s) => s.docusealSubmissionId?.includes(':'))
+        .map((s) => {
+          const slug = s.docusealSubmissionId!.split(':')[1]
+          return { name: s.name, email: s.email, url: `${process.env.DOCUSEAL_API_URL}/s/${slug}` }
+        })
+    }
+
+    return Response.json({
+      ok: true,
+      fillResults: result.fillResults,
+      status: result.status,
+      signingUrls,
+    })
   } catch (e) {
     console.error('[intake] PDF generation failed:', e)
     // Non-fatal -- client data is saved; agent can regenerate manually

@@ -178,6 +178,9 @@ export default function IntakePage() {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [autoSaveMsg, setAutoSaveMsg] = useState('')
+  const [fillResults, setFillResults] = useState<Array<{ formNumber: string; status: string; filename: string }>>([])
+  const [signingUrls, setSigningUrls] = useState<Array<{ name: string; email: string; url: string }>>([])
+  const [reviewingDocs, setReviewingDocs] = useState(true)
 
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set())
@@ -273,8 +276,10 @@ export default function IntakePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
-      const data = await res.json() as { ok?: boolean; error?: string }
+      const data = await res.json() as { ok?: boolean; error?: string; fillResults?: Array<{ formNumber: string; status: string; filename: string }>; signingUrls?: Array<{ name: string; email: string; url: string }> }
       if (!res.ok) { setError(data.error || 'Submission failed.'); return }
+      if (data.fillResults) setFillResults(data.fillResults.filter((r) => r.status === 'filled'))
+      if (data.signingUrls) setSigningUrls(data.signingUrls)
       setDone(true)
     } catch {
       setError('Network error. Please try again.')
@@ -317,22 +322,141 @@ export default function IntakePage() {
   }
 
   if (done) {
+    // Step 1: Review filled documents, then Step 2: Sign
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-5">
-            <svg className="w-8 h-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="min-h-screen bg-slate-50">
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+          <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <span className="font-bold text-slate-900 text-sm">FormFlowNC</span>
+            </div>
+            <span className="text-xs text-slate-500">{pkg?.propertyAddress}</span>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 mb-2">You&apos;re All Set!</h2>
-          <p className="text-slate-500 text-sm leading-relaxed">
-            Your information has been submitted. Your agent will send signature requests to{' '}
-            <strong>{pkg?.signers.map((s) => s.name).join(', ')}</strong> shortly.
-          </p>
-          <div className="mt-6 bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-800">
-            Check your email for DocuSeal signature requests within the next few minutes.
-          </div>
+        </header>
+
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          {reviewingDocs ? (
+            <>
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-7 h-7 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">Review Your Documents</h2>
+                <p className="text-sm text-slate-500">
+                  Your information has been filled into the forms below. Please review each document before signing.
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                {fillResults.map((result) => {
+                  const form = pkg?.forms.find((f) => f.formNumber === result.formNumber)
+                  return (
+                    <div key={result.formNumber} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                      <div className="px-4 py-3 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            Form {result.formNumber}
+                          </p>
+                          <p className="text-xs text-slate-500">{form?.formName || result.filename}</p>
+                        </div>
+                        <a
+                          href={`/api/intake/${token}/documents?form=${result.formNumber}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-600 hover:text-teal-800 bg-teal-50 px-3 py-1.5 rounded-lg transition"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View PDF
+                        </a>
+                      </div>
+                      {/* Inline PDF preview */}
+                      <div className="border-t border-slate-100">
+                        <iframe
+                          src={`/api/intake/${token}/documents?form=${result.formNumber}`}
+                          className="w-full h-[500px] bg-slate-50"
+                          title={`Form ${result.formNumber}`}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {signingUrls.length > 0 ? (
+                <button
+                  onClick={() => setReviewingDocs(false)}
+                  className="w-full bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-bold py-4 rounded-xl text-base transition"
+                >
+                  I&apos;ve Reviewed — Proceed to Sign &rarr;
+                </button>
+              ) : (
+                <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-800 text-center">
+                  Documents submitted successfully. Your agent will follow up with next steps.
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 mb-1">Sign Your Documents</h2>
+                <p className="text-sm text-slate-500">
+                  Click the link below to complete your electronic signature.
+                </p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                {signingUrls.map((signer) => (
+                  <a
+                    key={signer.email}
+                    href={signer.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-white border-2 border-blue-200 rounded-xl px-5 py-4 hover:border-blue-400 hover:shadow-md transition group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-base font-semibold text-slate-900">{signer.name}</p>
+                        <p className="text-xs text-slate-500">{signer.email}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 group-hover:text-blue-800">
+                        Open Signing Page
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setReviewingDocs(true)}
+                className="w-full border border-slate-200 text-slate-600 font-medium py-3 rounded-xl text-sm hover:bg-slate-50 transition"
+              >
+                &larr; Back to Document Review
+              </button>
+
+              <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+                <strong>Note:</strong> The signing page will ask for your signature and date.
+                The form data you entered has been pre-filled into your documents (viewable above).
+              </div>
+            </>
+          )}
         </div>
       </div>
     )

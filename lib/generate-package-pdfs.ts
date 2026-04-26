@@ -95,9 +95,11 @@ export async function generatePackagePdfs(packageId: string): Promise<GenerateRe
         newStatus = 'signing'
 
         for (const submitter of submission.submitters) {
+          // Store "submissionId:slug" so we can construct signing URLs later
+          const signerRef = `${submission.id}:${submitter.slug}`
           await prisma.packageSigner.updateMany({
             where: { packageId, email: submitter.email },
-            data: { docusealSubmissionId: String(submission.id) },
+            data: { docusealSubmissionId: signerRef },
           })
         }
       }
