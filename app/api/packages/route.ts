@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth'
 import { verifyCsrfToken } from '@/lib/csrf'
 import prisma from '@/lib/db'
-import { sendPackageCreatedEmail } from '@/lib/email'
+import { sendPackageCreatedEmail, sendClientIntakeEmail } from '@/lib/email'
 import { v4 as uuidv4 } from 'uuid'
 
 const CSRF_HEADER = 'x-csrf-token'
@@ -72,9 +72,10 @@ export async function POST(request: Request) {
 
     const agent = await prisma.agent.findUnique({
       where: { id: session.agentId },
-      select: { name: true, email: true },
+      select: { name: true, email: true, phone: true },
     })
     if (agent) {
+      // Notify the agent
       await sendPackageCreatedEmail({
         agentEmail: agent.email,
         agentName: agent.name,
@@ -82,6 +83,19 @@ export async function POST(request: Request) {
         clientLink,
         expiresAt,
       })
+
+      // Send intake link to each signer/client
+      for (const signer of pkg.signers) {
+        await sendClientIntakeEmail({
+          signerEmail: signer.email,
+          signerName: signer.name,
+          propertyAddress: propertyAddress.trim(),
+          agentName: agent.name,
+          agentPhone: agent.phone || '',
+          clientLink,
+          expiresAt,
+        })
+      }
     }
 
     return Response.json({ package: pkg, clientLink }, { status: 201 })

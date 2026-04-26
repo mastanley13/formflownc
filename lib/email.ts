@@ -119,6 +119,43 @@ export async function sendAgentCompletionEmail(opts: {
   })
 }
 
+// Sent to each signer/client when the package is created with their intake link
+export async function sendClientIntakeEmail(opts: {
+  signerEmail: string
+  signerName: string
+  propertyAddress: string
+  agentName: string
+  agentPhone: string
+  clientLink: string
+  expiresAt: Date
+}) {
+  const expires = opts.expiresAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const html = '<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px">'
+    + '<div style="background:#0f766e;color:#fff;border-radius:12px;padding:20px 24px;margin-bottom:24px">'
+    + '<h1 style="margin:0;font-size:20px;font-weight:700">FormFlowNC</h1>'
+    + '</div>'
+    + '<h2 style="color:#0f172a;margin-bottom:8px">Your documents are ready for review</h2>'
+    + '<p style="color:#475569">Hi ' + esc(opts.signerName) + ',</p>'
+    + '<p style="color:#475569">Your real estate agent <strong>' + esc(opts.agentName) + '</strong> has prepared documents for <strong>' + esc(opts.propertyAddress) + '</strong> that need your information and signature.</p>'
+    + '<p style="color:#475569">Please click the button below to complete your portion. The form takes about 5-10 minutes.</p>'
+    + '<div style="text-align:center;margin:28px 0">'
+    + '<a href="' + esc(opts.clientLink) + '" style="display:inline-block;background:#0f766e;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Complete Your Documents</a>'
+    + '</div>'
+    + '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:20px 0">'
+    + '<p style="margin:0 0 4px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Link expires</p>'
+    + '<p style="margin:0;color:#475569">' + expires + '</p>'
+    + '</div>'
+    + '<p style="color:#475569;font-size:14px">If you have questions, contact ' + esc(opts.agentName) + (opts.agentPhone ? ' at ' + esc(opts.agentPhone) : '') + '.</p>'
+    + '<p style="color:#94a3b8;font-size:12px;margin-top:32px">FormFlowNC - NC REALTOR Document Automation</p>'
+    + '</div>'
+
+  await send({
+    to: opts.signerEmail,
+    subject: 'Action needed: Documents for ' + opts.propertyAddress,
+    html,
+  })
+}
+
 // Sent to each signer when their signature is collected
 export async function sendSignerCompletionEmail(opts: {
   signerEmail: string
