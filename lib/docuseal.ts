@@ -1,5 +1,5 @@
 // DocuSeal API client — self-hosted instance
-// Configure DOCUSEAL_API_URL and DOCUSEAL_API_TOKEN in .env
+// Configure DOCUSEAL_API_URL, DOCUSEAL_API_TOKEN, and DOCUSEAL_TEMPLATE_ID in .env
 //
 // If DOCUSEAL_API_URL is not set, all calls are no-ops and packages skip
 // straight to "completed" after PDF generation.
@@ -24,7 +24,7 @@ export type DocuSealSubmissionResult = {
     id: number
     email: string
     name: string
-    status: string    // pending | opened | completed
+    status: string    // pending | opened | completed | sent
     slug: string      // signing URL slug: {DOCUSEAL_URL}/s/{slug}
   }>
   status: string      // pending | completed
@@ -53,12 +53,20 @@ function baseUrl(): string {
   return process.env.DOCUSEAL_API_URL!.replace(/\/$/, '')
 }
 
-// Upload a single filled PDF as a DocuSeal template, then immediately
-// create a submission (one-off — no reusable template).
+function templateId(): number {
+  const id = process.env.DOCUSEAL_TEMPLATE_ID
+  if (!id) throw new Error('DOCUSEAL_TEMPLATE_ID is not set')
+  return parseInt(id, 10)
+}
+
+// Create a submission using a pre-configured DocuSeal template.
 //
-// DocuSeal "create_submission_from_documents" endpoint:
-// POST /api/submissions/email — creates template + submission in one call
-// Body: { documents: [{ name, file }], submitters: [...], send_email: true }
+// The template must be created in the DocuSeal admin UI with signature/date
+// fields. Each submission sends the template document to signers for signing.
+//
+// DocuSeal open-source API:
+// POST /api/submissions — creates submission for an existing template
+// Body: { template_id, submitters: [...], send_email: true }
 export async function createSubmission(
   documents: DocuSealDocument[],
   signers: DocuSealSigner[],
@@ -66,25 +74,20 @@ export async function createSubmission(
 ): Promise<DocuSealSubmissionResult | null> {
   if (!isConfigured()) return null
 
-  // Convert documents to DocuSeal's expected format (base64 PDF)
-  const docPayload = documents.map((d) => ({
-    name: d.name,
-    file: `data:application/pdf;base64,${d.bytes.toString('base64')}`,
-  }))
-
-  const submitterPayload = signers.map((s, i) => ({
+  const submitterPayload = signers.map((s) => ({
     name: s.name,
     email: s.email,
-    role: s.role || `Party ${i + 1}`,
+    role: s.role || 'First Party',
     phone: s.phone,
+    send_email: true,
     message: message,
   }))
 
-  const res = await fetch(`${baseUrl()}/api/submissions/emails`, {
+  const res = await fetch(`${baseUrl()}/api/submissions`, {
     method: 'POST',
     headers: headers(),
     body: JSON.stringify({
-      documents: docPayload,
+      template_id: templateId(),
       submitters: submitterPayload,
       send_email: true,
     }),
@@ -95,7 +98,32 @@ export async function createSubmission(
     throw new Error(`DocuSeal submission failed (${res.status}): ${err}`)
   }
 
-  return res.json() as Promise<DocuSealSubmissionResult>
+  // The API returns an array of submitter objects; wrap into our result shape
+  const submitters = await res.json() as Array<{
+    id: number
+    email: string
+    name: string
+    status: string
+    slug: string
+    submission_id: number
+  }>
+
+  if (!submitters.length) {
+    throw new Error('DocuSeal returned empty submitters array')
+  }
+
+  return {
+    id: submitters[0].submission_id,
+    submitters: submitters.map((s) => ({
+      id: s.id,
+      email: s.email,
+      name: s.name,
+      status: s.status,
+      slug: s.slug,
+    })),
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  }
 }
 
 export async function getSubmissionStatus(submissionId: number): Promise<DocuSealSubmissionStatus | null> {
