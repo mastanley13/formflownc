@@ -102,7 +102,8 @@ export async function generatePackagePdfs(packageId: string): Promise<GenerateRe
         }
       }
     } catch (e) {
-      console.error('[generate-pdfs] DocuSeal submission failed:', e)
+      const errMsg = e instanceof Error ? e.stack || e.message : String(e)
+      console.error('[generate-pdfs] DocuSeal submission failed:', errMsg)
       newStatus = 'client_completed'
     }
   } else if (hasFilledDocs && !docusealConfigured) {

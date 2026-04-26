@@ -1,6 +1,8 @@
 import prisma from '@/lib/db'
 import { generatePackagePdfs } from '@/lib/generate-package-pdfs'
 
+export const maxDuration = 60;
+
 async function resolvePackage(token: string) {
   return prisma.package.findUnique({
     where: { clientLinkToken: token },

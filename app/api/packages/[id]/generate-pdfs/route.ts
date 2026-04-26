@@ -11,6 +11,8 @@ import { verifyCsrfToken } from '@/lib/csrf'
 import prisma from '@/lib/db'
 import { generatePackagePdfs } from '@/lib/generate-package-pdfs'
 
+export const maxDuration = 60;
+
 const CSRF_HEADER = 'x-csrf-token'
 
 function timingSafeTokenCompare(a: string, b: string): boolean {
