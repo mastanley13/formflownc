@@ -48,6 +48,7 @@ model Package {
   formsSelected       String          // JSON array of form_template ids
   agentData           String          @default("{}")
   clientData          String          @default("{}")
+  filledDocuments     String          @default("{}") // JSON: { "140": "base64...", "161": "base64..." }
   createdAt           DateTime        @default(now())
   agent               Agent           @relation(fields: [agentId], references: [id])
   signers             PackageSigner[]

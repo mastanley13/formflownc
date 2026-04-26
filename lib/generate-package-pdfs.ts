@@ -52,6 +52,7 @@ export async function generatePackagePdfs(packageId: string): Promise<GenerateRe
 
   const fillResults: GenerateResult['fillResults'] = []
   const docusealDocs: DocuSealDocument[] = []
+  const filledDocsMap: Record<string, string> = {} // formNumber -> base64
 
   for (const template of templates) {
     const filename = `form-${template.formNumber}.pdf`
@@ -65,13 +66,23 @@ export async function generatePackagePdfs(packageId: string): Promise<GenerateRe
       const { pdfBytes: filledBytes, filledCount } = await fillPdf(pdfBytes, fieldMapping, mergedData, false)
       await writeFile(outPath, Buffer.from(filledBytes))
 
-      docusealDocs.push({ name: `${template.formNumber} - ${template.formName}.pdf`, bytes: Buffer.from(filledBytes) })
+      const filledBuffer = Buffer.from(filledBytes)
+      docusealDocs.push({ name: `${template.formNumber} - ${template.formName}.pdf`, bytes: filledBuffer })
+      filledDocsMap[template.formNumber] = filledBuffer.toString('base64')
       fillResults.push({ formNumber: template.formNumber, status: 'filled', filledCount, filename })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
       fillResults.push({ formNumber: template.formNumber, status: 'skipped', filledCount: 0, filename })
       console.warn(`[generate-pdfs] Skipped form ${template.formNumber}: ${msg}`)
     }
+  }
+
+  // Persist filled PDFs to database so they survive across serverless invocations
+  if (Object.keys(filledDocsMap).length > 0) {
+    await prisma.package.update({
+      where: { id: packageId },
+      data: { filledDocuments: JSON.stringify(filledDocsMap) },
+    })
   }
 
   const hasFilledDocs = docusealDocs.length > 0
