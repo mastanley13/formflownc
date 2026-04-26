@@ -75,13 +75,13 @@ export async function POST(request: Request) {
       select: { name: true, email: true },
     })
     if (agent) {
-      sendPackageCreatedEmail({
+      await sendPackageCreatedEmail({
         agentEmail: agent.email,
         agentName: agent.name,
         propertyAddress: propertyAddress.trim(),
         clientLink,
         expiresAt,
-      }).catch((e) => console.error('[email] Package created email failed:', e))
+      })
     }
 
     return Response.json({ package: pkg, clientLink }, { status: 201 })

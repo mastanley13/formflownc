@@ -56,12 +56,12 @@ export async function POST(request: Request) {
         include: { package: { include: { agent: true } } },
       })
       if (signer) {
-        sendSignerCompletionEmail({
+        await sendSignerCompletionEmail({
           signerEmail: signer.email,
           signerName: signer.name,
           propertyAddress: signer.package.propertyAddress,
           agentName: signer.package.agent.name,
-        }).catch((e) => console.error('[email] Signer completion email failed:', e))
+        })
       }
     }
   }
@@ -112,12 +112,12 @@ export async function POST(request: Request) {
             // Filled directory may not exist — skip attachments
           }
 
-          sendAgentCompletionEmail({
+          await sendAgentCompletionEmail({
             agentEmail: pkg.agent.email,
             agentName: pkg.agent.name,
             propertyAddress: pkg.propertyAddress,
             attachments,
-          }).catch((e) => console.error('[email] Agent completion email failed:', e))
+          })
         }
       }
     }
